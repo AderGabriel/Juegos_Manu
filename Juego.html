@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Catcher</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    canvas {
+      background-color: #000;
+      border: 2px solid white;
+    }
+    #score {
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Puntuación: 0</div>
+  <canvas id="game" width="300" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+
+    const player = {
+      x: 130,
+      width: 40,
+      height: 10,
+      speed: 5
+    };
+
+    let blocks = [];
+    let score = 0;
+    let gameOver = false;
+
+    function drawPlayer() {
+      ctx.fillStyle = "cyan";
+      ctx.fillRect(player.x, canvas.height - player.height - 10, player.width, player.height);
+    }
+
+    function drawBlocks() {
+      ctx.fillStyle = "orange";
+      blocks.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.size, b.size);
+      });
+    }
+
+    function updateBlocks() {
+      blocks.forEach(b => b.y += b.speed);
+      blocks = blocks.filter(b => {
+        if (
+          b.y + b.size >= canvas.height - player.height - 10 &&
+          b.x < player.x + player.width &&
+          b.x + b.size > player.x
+        ) {
+          score++;
+          scoreEl.textContent = 'Puntuación: ' + score;
+          return false;
+        } else if (b.y > canvas.height) {
+          setTimeout(() => {
+            alert('Juego terminado. Puntuación: ' + score);
+            resetGame();
+          }, 10);
+          gameOver = true;
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function resetGame() {
+      score = 0;
+      blocks = [];
+      player.x = 130;
+      gameOver = false;
+      scoreEl.textContent = 'Puntuación: 0';
+    }
+
+    function spawnBlock() {
+      const size = 20;
+      const x = Math.floor(Math.random() * (canvas.width - size));
+      blocks.push({ x, y: 0, size, speed: 2 });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawBlocks();
+    }
+
+    function update() {
+      updateBlocks();
+      draw();
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && player.x > 0) {
+        player.x -= player.speed;
+      } else if (e.key === "ArrowRight" && player.x + player.width < canvas.width) {
+        player.x += player.speed;
+      }
+    });
+
+    setInterval(() => {
+      if (!gameOver) spawnBlock();
+    }, 1000);
+
+    setInterval(() => {
+      if (!gameOver) update();
+    }, 20);
+  </script>
+</body>
+</html>
